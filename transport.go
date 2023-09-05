@@ -16,7 +16,6 @@ func (t *authenticatedTransport) RoundTrip(request *http.Request) (*http.Respons
 	request.SetBasicAuth(t.username, t.password)
 	res, err := transport.RoundTrip(request)
 	if res.StatusCode != 200 {
-
 		return nil, fmt.Errorf("status code not ok: %s", res.Status)
 	}
 	return res, err

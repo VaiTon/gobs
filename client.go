@@ -15,22 +15,18 @@ func NewClient(host string, username string, password string) *Client {
 	return &Client{host: host, http: &http.Client{Transport: t}}
 }
 
-func (c *Client) GetFile(project string, pkg string, file string) ([]byte, error) {
-
-	res, err := c.http.Get(c.host + "/source/" + project + "/" + pkg + "/" + file)
+// GetRaw returns the raw response body for a given URL
+//
+// This is useful for downloading files or other content without parsing it into
+// the corresponding struct.
+//
+// The request is authenticated using the credentials provided when creating the
+// client.
+func (c *Client) GetRaw(url string) (io.ReadCloser, error) {
+	res, err := c.http.Get(c.host + url)
 	if err != nil {
 		return nil, err
 	}
 
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	err = res.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
+	return res.Body, nil
 }

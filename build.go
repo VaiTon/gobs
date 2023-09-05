@@ -121,15 +121,14 @@ func (c *Client) GetArchitectures(proj string, repo string) ([]string, error) {
 	return archs, nil
 }
 
-func (c *Client) GetPackageBinaries(proj, repo, arch, pkg string) (BuildBinaryList, error) {
-	binaries := BuildBinaryList{Package: pkg}
-
+func (c *Client) GetPackageBinaries(proj, repo, arch, pkg string) (*BuildBinaryList, error) {
 	res, err := c.http.Get(c.host + "/build/" + proj + "/" + repo + "/" + arch + "/" + pkg)
 	if err != nil {
-		return binaries, err
+		return nil, err
 	}
 
-	err = fromXml(res, &binaries)
+	binaries := &BuildBinaryList{Package: pkg}
+	err = fromXml(res, binaries)
 	return binaries, err
 }
 
@@ -153,6 +152,41 @@ func (c *Client) GetPackageBuildStatus(proj, repo, arch, pkg string) (*BuildStat
 	status := &BuildStatus{}
 	err = fromXml(res, status)
 	return status, err
+}
+
+type BuildInfo struct {
+	Project     string `xml:"project,attr"`
+	Repository  string `xml:"repository,attr"`
+	Package     string `xml:"package,attr"`
+	DownloadUrl string `xml:"downloadurl,attr"`
+
+	Arch               string   `xml:"arch"`
+	SrcMD5             string   `xml:"srcmd5"`
+	VerifyMD5          string   `xml:"VerifyMD5"`
+	Rev                int      `xml:"rev"`
+	Specfile           string   `xml:"specfile"`
+	Release            string   `xml:"release"`
+	VersRel            string   `xml:"versrel"`
+	SubPackages        []string `xml:"subpack"`
+	BinaryDependencies []struct {
+		Name       string `xml:"name,attr"`
+		Version    string `xml:"version,attr"`
+		Release    string `xml:"release,attr"`
+		Arch       string `xml:"arch,attr"`
+		Project    string `xml:"project,attr"`
+		Repository string `xml:"repository,attr"`
+	} `xml:"bdep"`
+}
+
+func (c *Client) GetBuildInfo(proj, repo, arch, pkg string) (*BuildInfo, error) {
+	res, err := c.http.Get(c.host + "/build/" + proj + "/" + repo + "/" + arch + "/" + pkg + "/_buildinfo")
+	if err != nil {
+		return nil, err
+	}
+
+	info := &BuildInfo{}
+	err = fromXml(res, info)
+	return info, err
 }
 
 type BuildReason struct {
