@@ -1,4 +1,4 @@
-module go-obs
+module github.com/VaiTon/gobs
 
 go 1.21
 
